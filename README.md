@@ -3,11 +3,11 @@
 Create a Recipe Management System.
 
 # Data Fields
-## id
-## name
-## category
-## prep_time
-## difficulty
+- id
+- name
+- category
+- prep_time
+- difficulty
 
 # Requirements
  - prep_time must be greater than 0.
