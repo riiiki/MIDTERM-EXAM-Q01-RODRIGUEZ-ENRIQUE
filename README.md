@@ -1,6 +1,6 @@
 # MIDTERM-EXAM-Q01-RODRIGUEZ-ENRIQUE
 ## Recipe Management System
-Create a Recipe Management System.
+-  Create a Recipe Management System.
 
 # Data Fields
 - id
@@ -17,7 +17,7 @@ Create a Recipe Management System.
  - Allow users to retrieve and delete a recipe by ID.
 
 # Required API
-## GET    /api/recipes
-## GET    /api/recipes/:id
-## POST   /api/recipes
-## DELETE /api/recipes/:id
+- GET    /api/recipes
+- GET    /api/recipes/:id
+- POST   /api/recipes
+- DELETE /api/recipes/:id
