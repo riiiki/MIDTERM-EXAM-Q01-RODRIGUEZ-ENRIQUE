@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>Recipe Management System</h1>
+    </header>
+
+    <div class="layout">
+        <div class="left-panel">
+            <section>
+                <h3>Add New Recipe</h3>
+                <form id="recipeForm">
+                    <input type="text" id="name" placeholder="Recipe Name" required>
+                    <input type="text" id="category" placeholder="Category (e.g., Italian, Dessert)" required>
+                    <input type="number" id="prep_time" placeholder="Prep Time (minutes, must be > 0)" min="1" required>
+                    <select id="difficulty" required>
+                        <option value="" disabled selected>Select Difficulty</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                    <button type="submit">Insert Recipe</button>
+                    <div id="formError" class="error"></div>
+                </form>
+            </section>
+
+            <section>
+                <h3>Search Recipe by ID</h3>
+                <input type="text" id="searchId" placeholder="Enter Recipe ID">
+                <button onclick="searchById()" style="background: #007BFF;">Search ID</button>
+                <div id="searchResult" style="margin-top: 10px;"></div>
+            </section>
+        </div>
+
+        <div class="right-panel">
+            <section>
+                <h3>All Recipes</h3>
+                <button onclick="loadRecipes()" style="background: #17a2b8;">Refresh List</button>
+                <table id="recipesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Prep Time</th>
+                            <th>Difficulty</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/recipes';
+
+        window.onload = loadRecipes;
+
+        async function loadRecipes() {
+            try {
+                const response = await fetch(API_URL);
+                const recipes = await response.json();
+                const tbody = document.querySelector('#recipesTable tbody');
+                tbody.innerHTML = '';
+
+                if (recipes.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No recipes found.</td></tr>`;
+                    return;
+                }
+
+                recipes.forEach(recipe => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${recipe.id}</td>
+                        <td>${escapeHtml(recipe.name)}</td>
+                        <td>${escapeHtml(recipe.category)}</td>
+                        <td>${recipe.prep_time} minutes</td>
+                        <td>${escapeHtml(recipe.difficulty)}</td>
+                        <td><button class="delete-btn" onclick="deleteRecipe('${recipe.id}')">Delete</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading recipes:', error);
+            }
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const category = document.getElementById('category').value;
+            const prep_time = document.getElementById('prep_time').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const errorDiv = document.getElementById('formError');
+            errorDiv.textContent = '';
+
+            if (Number(prep_time) <= 0) {
+                errorDiv.textContent = 'Preparation time must be greater than 0.';
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, category, prep_time: Number(prep_time), difficulty })
+                });
+
+                if (response.ok) {
+                    document.getElementById('recipeForm').reset();
+                    loadRecipes();
+                } else {
+                    const errData = await response.json();
+                    errorDiv.textContent = errData.error || 'Failed to add recipe.';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error while adding recipe.';
+            }
+        });
+
+        async function searchById() {
+            const id = document.getElementById('searchId').value.trim();
+            const resultDiv = document.getElementById('searchResult');
+            const tbody = document.querySelector('#recipesTable tbody');
+            
+            if (!id) {
+                resultDiv.innerHTML = '<span class="error">Please enter an ID.</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                if (response.ok) {
+                    const recipe = await response.json();
+                    tbody.innerHTML = '';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${recipe.id}</td>
+                        <td>${escapeHtml(recipe.name)}</td>
+                        <td>${escapeHtml(recipe.category)}</td>
+                        <td>${recipe.prep_time} minutes</td>
+                        <td>${escapeHtml(recipe.difficulty)}</td>
+                        <td><button class="delete-btn" onclick="deleteRecipe('${recipe.id}')">Delete</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                    resultDiv.innerHTML = '';
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Recipe not found.</td></tr>';
+                    resultDiv.innerHTML = '<span class="error">Recipe not found.</span>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error fetching recipe.</td></tr>';
+                resultDiv.innerHTML = '<span class="error">Error fetching recipe.</span>';
+            }
+        }
+
+        async function deleteRecipe(id) {
+            if (!confirm('Are you sure you want to delete this recipe?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadRecipes();
+                } else {
+                    alert('Failed to delete recipe.');
+                }
+            } catch (error) {
+                console.error('Error deleting recipe:', error);
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>

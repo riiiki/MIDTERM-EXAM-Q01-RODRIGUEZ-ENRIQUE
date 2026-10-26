@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "name": "Jaden",
+    "category": "Dessert",
+    "prep_time": 30,
+    "difficulty": "Easy"
+  },
+  {
+    "id": "2",
+    "name": "Pax",
+    "category": "Spanish",
+    "prep_time": 25,
+    "difficulty": "Hard"
+  },
+  {
+    "id": "3",
+    "name": "Sean Marco",
+    "category": "Juicy",
+    "prep_time": 45,
+    "difficulty": "Medium"
+  },
+  {
+    "id": "4",
+    "name": "Test Recipe",
+    "category": "Dessert",
+    "prep_time": 10,
+    "difficulty": "Easy"
+  }
+]
